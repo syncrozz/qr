@@ -11,10 +11,10 @@ export const APP_CONFIG: AppConfig = {
     title: 'Sokong Inovasi Ini ❤️',
     description: 'Platform ini dibangunkan untuk menyediakan tools digital yang mudah dan percuma kepada semua.',
     subDescription: 'Jika platform ini bermanfaat kepada anda, anda dialu-alukan untuk menyokong usaha ini.',
-    minimumNote: 'RM1 pun amat dihargai.',
+    minimumNote: 'RM1 pun amat dihargai🫰',
     bankName: 'DuitNow QR / Akaun Bank',
     accountHolder: 'SYNCROZZ DIGITAL INNOVATION',
-    accountNumber: '1234-5678-9012 (DuitNow ID)',
+    accountNumber: '8533-76-0936 (ACC NO)',
     qrImagePlaceholder: 'DONATION_QR'
   }
 };
