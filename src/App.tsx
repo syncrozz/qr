@@ -335,8 +335,16 @@ export default function App() {
 </div>
 
         <footer className="text-center mt-3 text-xs text-slate-400">
-          {APP_CONFIG.tagline}
-        </footer>
+  Developed by{' '}
+  <a
+    href="https://sites.google.com/view/khairi-innovation/"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="font-medium text-indigo-500 hover:text-indigo-600 hover:underline transition"
+  >
+    Syncrozz
+  </a>
+</footer>
       </div>
     </main>
   );
