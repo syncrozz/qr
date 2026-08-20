@@ -327,7 +327,7 @@ export default function App() {
         <div className="flex justify-center mt-8">
   <a
     href="#support"
-    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-indigo-100 text-indigo-600 text-sm font-medium shadow-sm hover:bg-indigo-50 hover:border-indigo-200 hover:shadow transition-all"
+    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-500 text-xs font-medium hover:bg-slate-200 hover:text-slate-600 transition-all"
   >
     <span>Sokong Inovasi Ini</span>
     <span aria-hidden="true">❤️</span>
@@ -340,7 +340,7 @@ export default function App() {
     href="https://sites.google.com/view/khairi-innovation/"
     target="_blank"
     rel="noopener noreferrer"
-    className="font-medium text-indigo-500 hover:text-indigo-600 hover:underline transition"
+    className="font-medium text-slate-500 hover:text-slate-600 hover:underline transition"
   >
     Syncrozz
   </a>
