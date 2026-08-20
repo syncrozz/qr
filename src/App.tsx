@@ -324,14 +324,15 @@ export default function App() {
           </div>
         )}
 
-        <div className="text-center mt-8">
-          <a
-            href="#support"
-            className="text-xs text-slate-400 hover:text-indigo-600 transition"
-          >
-            Sokong Inovasi Ini ❤️
-          </a>
-        </div>
+        <div className="flex justify-center mt-8">
+  <a
+    href="#support"
+    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-indigo-100 text-indigo-600 text-sm font-medium shadow-sm hover:bg-indigo-50 hover:border-indigo-200 hover:shadow transition-all"
+  >
+    <span>Sokong Inovasi Ini</span>
+    <span aria-hidden="true">❤️</span>
+  </a>
+</div>
 
         <footer className="text-center mt-3 text-xs text-slate-400">
           {APP_CONFIG.tagline}
