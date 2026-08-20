@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, Download, ExternalLink, QrCode, Share2 } from 'lucide-react';
 
 import { EmailGate } from './components/EmailGate';
@@ -23,8 +23,26 @@ const INITIAL_STATE: AppState = {
   errorMessage: null
 };
 
+const SUPPORT_QR_URL =
+  'https://raw.githubusercontent.com/syncrozz/syncrozz-assets/main/Bank%20QR/QR%20RYT%20for%20Sumbangan.jpg';
+
 export default function App() {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
+  const [isSupportPage, setIsSupportPage] = useState(
+    window.location.hash === '#support'
+  );
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setIsSupportPage(window.location.hash === '#support');
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
 
   const handleEmailProceed = (email: string) => {
     setState((current) => ({
@@ -117,6 +135,76 @@ export default function App() {
     }
   };
 
+  if (isSupportPage) {
+    return (
+      <main className="min-h-screen bg-slate-50 px-4 py-8 sm:py-12">
+        <div className="mx-auto w-full max-w-lg">
+          <header className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 mb-4">
+              <QrCode className="w-6 h-6" />
+            </div>
+
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              Sokong Inovasi Ini ❤️
+            </h1>
+
+            <p className="text-sm text-slate-500 mt-2">
+              {APP_CONFIG.support.description}
+            </p>
+          </header>
+
+          <section className="bg-white rounded-2xl border border-slate-100 shadow-xl shadow-slate-900/5 p-6 sm:p-8">
+            <div className="text-center">
+              <p className="text-sm text-slate-500 leading-relaxed">
+                {APP_CONFIG.support.subDescription}
+              </p>
+            </div>
+
+            <div className="flex justify-center mt-6">
+              <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+                <img
+                  src={SUPPORT_QR_URL}
+                  alt="QR Code Sokongan SYNCROZZ"
+                  className="w-64 h-64 object-contain"
+                />
+              </div>
+            </div>
+
+            <div className="text-center mt-6">
+              <p className="text-lg font-bold text-slate-900">
+                {APP_CONFIG.support.minimumNote}
+              </p>
+
+              <p className="text-sm text-slate-500 mt-2">
+                {APP_CONFIG.support.bankName}
+              </p>
+
+              <p className="text-sm font-medium text-slate-700 mt-1">
+                {APP_CONFIG.support.accountHolder}
+              </p>
+
+              <p className="text-sm text-slate-500 mt-1">
+                {APP_CONFIG.support.accountNumber}
+              </p>
+            </div>
+
+            <a
+              href="/"
+              className="mt-8 w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200 font-medium transition"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Kembali ke SYNCROZZ QR
+            </a>
+          </section>
+
+          <footer className="text-center mt-8 text-xs text-slate-400">
+            {APP_CONFIG.tagline}
+          </footer>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 sm:py-12">
       <div className="mx-auto w-full max-w-2xl">
@@ -179,6 +267,7 @@ export default function App() {
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
                 Kandungan
               </p>
+
               <p className="text-sm text-slate-700 break-all">
                 {state.qrContent}
               </p>
@@ -220,7 +309,7 @@ export default function App() {
                 Jana QR Baharu
               </button>
 
-              {/^https?:\/\//i.test(state.qrContent) && (
+              {/^(https?:\/\/)/i.test(state.qrContent) && (
                 <a
                   href={state.qrContent}
                   target="_blank"
@@ -235,7 +324,16 @@ export default function App() {
           </div>
         )}
 
-        <footer className="text-center mt-8 text-xs text-slate-400">
+        <div className="text-center mt-8">
+          <a
+            href="#support"
+            className="text-xs text-slate-400 hover:text-indigo-600 transition"
+          >
+            Sokong Inovasi Ini ❤️
+          </a>
+        </div>
+
+        <footer className="text-center mt-3 text-xs text-slate-400">
           {APP_CONFIG.tagline}
         </footer>
       </div>
