@@ -14,7 +14,7 @@ export const APP_CONFIG: AppConfig = {
       'Platform ini dibangunkan untuk menyediakan tools digital yang mudah dan percuma kepada semua.',
     subDescription:
       'Jika platform ini bermanfaat kepada anda, anda dialu-alukan untuk menyokong usaha ini.',
-    minimumNote: '',
+    minimumNote: 'RM1 pun amat dihargai 🫰',
     bankName: '',
     accountHolder: '',
     accountNumber: '',
