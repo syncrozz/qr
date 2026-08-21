@@ -50,8 +50,11 @@ export const EmailGate: React.FC<EmailGateProps> = ({ initialEmail, onProceed })
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div>
-          <label htmlFor="user-email-input" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
-            Alamat Email
+          <label
+           htmlFor="user-email-input"
+           className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2 text-center"
+          >
+           Alamat Email
           </label>
           <div className="relative rounded-xl shadow-xs">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
