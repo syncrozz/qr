@@ -121,19 +121,28 @@ export default function App() {
     }
   };
 
-  const handleShare = async () => {
-    const result = await sharePlatform(
-      APP_CONFIG.appName,
-      'Jana QR Code dengan mudah dan percuma menggunakan SYNCROZZ QR.'
-    );
+const handleShare = async () => {
+  if (!state.qrDataUrl) {
+    setState((current) => ({
+      ...current,
+      errorMessage: 'QR Code belum tersedia untuk dikongsi.'
+    }));
+    return;
+  }
 
-    if (!result.success) {
-      setState((current) => ({
-        ...current,
-        errorMessage: 'Gagal berkongsi platform.'
-      }));
-    }
-  };
+  const result = await sharePlatform(
+    APP_CONFIG.appName,
+    'QR Code yang dijana menggunakan SYNCROZZ QR.',
+    state.qrDataUrl
+  );
+
+  if (!result.success) {
+    setState((current) => ({
+      ...current,
+      errorMessage: 'Gagal berkongsi QR Code.'
+    }));
+  }
+};
 
   if (isSupportPage) {
     return (
