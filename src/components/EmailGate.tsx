@@ -92,7 +92,7 @@ export const EmailGate: React.FC<EmailGateProps> = ({ initialEmail, onProceed })
         </button>
       </form>
 
-      <div className="mt-6 pt-5 border-t border-slate-100 flex items-start gap-2.5 text-slate-500 text-xs leading-relaxed">
+      <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-2.5 text-slate-500 text-xs leading-relaxed text-center">
         <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
         <p>{APP_CONFIG.privacyNotice}</p>
       </div>
