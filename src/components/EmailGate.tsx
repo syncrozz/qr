@@ -40,9 +40,6 @@ export const EmailGate: React.FC<EmailGateProps> = ({ initialEmail, onProceed })
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 mb-4 ring-8 ring-indigo-50/50">
           <Mail className="w-7 h-7" />
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-          Bina QR Code Anda
-        </h2>
         <p className="text-sm text-slate-500 mt-2 font-normal">
           {APP_CONFIG.subTagline}
         </p>
