@@ -163,48 +163,45 @@ const handleShare = async () => {
           </header>
 
           <section className="bg-white rounded-2xl border border-slate-100 shadow-xl shadow-slate-900/5 p-6 sm:p-8">
-            <div className="text-center">
-              <p className="text-sm text-slate-500 leading-relaxed">
-                {APP_CONFIG.support.subDescription}
-              </p>
-            </div>
+  <div className="text-center">
+    <p className="text-sm text-slate-500 leading-relaxed">
+      {APP_CONFIG.support.subDescription}
+    </p>
+  </div>
 
-            <div className="flex justify-center mt-6">
-              <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                <img
-                  src={SUPPORT_QR_URL}
-                  alt="QR Code Sokongan SYNCROZZ"
-                  className="w-64 h-64 object-contain"
-                />
-              </div>
-            </div>
+  <div className="flex justify-center mt-6">
+    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+      <img
+        src={SUPPORT_QR_URL}
+        alt="QR Code Sokongan SYNCROZZ"
+        className="w-64 h-64 object-contain"
+      />
+    </div>
+  </div>
 
-            <div className="text-center mt-6">
-              <p className="text-lg font-bold text-slate-900">
-                {APP_CONFIG.support.minimumNote}
-              </p>
+  <div className="text-center mt-6">
+    <p className="text-lg font-bold text-slate-900">
+      {APP_CONFIG.support.minimumNote}
+    </p>
 
-              <p className="text-sm text-slate-500 mt-2">
-                {APP_CONFIG.support.bankName}
-              </p>
+    <a
+  href="https://hitpay.link/dwy2r4"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="mt-4 w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 font-medium shadow-md shadow-indigo-600/20 transition"
+>
+  <span>HitPay</span>
+</a>
+  </div>
 
-              <p className="text-sm font-medium text-slate-700 mt-1">
-                {APP_CONFIG.support.accountHolder}
-              </p>
-
-              <p className="text-sm text-slate-500 mt-1">
-                {APP_CONFIG.support.accountNumber}
-              </p>
-            </div>
-
-            <a
-              href="/"
-              className="mt-8 w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200 font-medium transition"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Kembali ke SYNCROZZ QR
-            </a>
-          </section>
+  <a
+    href="/"
+    className="mt-8 w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200 font-medium transition"
+  >
+    <ArrowLeft className="w-4 h-4" />
+    Kembali ke SYNCROZZ QR
+  </a>
+</section>
 
           <footer className="text-center mt-8 text-xs text-slate-400">
             {APP_CONFIG.tagline}
