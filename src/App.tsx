@@ -185,7 +185,7 @@ const handleShare = async () => {
     </p>
 
     <a
-  href="https://hitpay.link/dwy2r4"
+  href="https://hitpay.link/qkpgp1"
   target="_blank"
   rel="noopener noreferrer"
   className="mt-4 w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 font-medium shadow-md shadow-indigo-600/20 transition"
