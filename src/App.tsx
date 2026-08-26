@@ -324,23 +324,9 @@ export default function App() {
             </div>
 
             <div className="text-center mt-6 pt-4 border-t border-slate-100">
-              <p className="text-base font-bold text-slate-900">
+              <p className="text-sm font-bold text-slate-900">
                 {APP_CONFIG.support.minimumNote}
               </p>
-
-              <p className="text-xs text-slate-400 mt-1 mb-3">
-                Atau bayar melalui gateway dalam talian:
-              </p>
-
-              <a
-                href="https://hitpay.link/qkpgp1"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 font-medium shadow-md shadow-indigo-600/20 transition"
-              >
-                <span>Bayar Melalui HitPay</span>
-                <ExternalLink className="w-4 h-4" />
-              </a>
             </div>
 
             <button
@@ -513,7 +499,7 @@ export default function App() {
             href="#support"
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-500 text-xs font-medium hover:bg-slate-200 hover:text-slate-600 transition-all"
           >
-            <span>Sokong Inovasi Ini</span>
+            <span>Support</span>
             <span aria-hidden="true">❤️</span>
           </a>
         </div>
@@ -532,4 +518,4 @@ export default function App() {
       </div>
     </main>
   );
-}
+}

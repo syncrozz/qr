@@ -40,9 +40,6 @@ export const EmailGate: React.FC<EmailGateProps> = ({ initialEmail, onProceed })
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 mb-4 ring-8 ring-indigo-50/50">
           <Mail className="w-7 h-7" />
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-          Bina QR Code Anda
-        </h2>
         <p className="text-sm text-slate-500 mt-2 font-normal">
           {APP_CONFIG.subTagline}
         </p>
@@ -50,9 +47,6 @@ export const EmailGate: React.FC<EmailGateProps> = ({ initialEmail, onProceed })
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div>
-          <label htmlFor="user-email-input" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
-            Alamat Email
-          </label>
           <div className="relative rounded-xl shadow-xs">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
               <Mail className="w-5 h-5" />
@@ -92,8 +86,7 @@ export const EmailGate: React.FC<EmailGateProps> = ({ initialEmail, onProceed })
         </button>
       </form>
 
-      <div className="mt-6 pt-5 border-t border-slate-100 flex items-start gap-2.5 text-slate-500 text-xs leading-relaxed">
-        <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+      <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-2.5 text-slate-500 text-xs leading-relaxed text-center">
         <p>{APP_CONFIG.privacyNotice}</p>
       </div>
     </div>
