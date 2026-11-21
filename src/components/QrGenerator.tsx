@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, LogOut, QrCode, Sparkles } from 'lucide-react';
+import { AlertCircle, LogOut, Sparkles } from 'lucide-react';
 import { QR_CONTENT_MAX_LENGTH } from '../services/qrHistoryService';
 import type { AuthUser } from '../types';
 
@@ -90,7 +90,7 @@ export const QrGenerator: React.FC<QrGeneratorProps> = ({
           type="button"
           onClick={onSignOut}
           disabled={isSigningOut}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0 cursor-pointer disabled:opacity-60 whitespace-nowrap"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 shadow-xs hover:bg-rose-600 hover:text-white hover:border-rose-600 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 transition duration-150 shrink-0 cursor-pointer disabled:opacity-60 whitespace-nowrap"
         >
           <LogOut className="w-3.5 h-3.5" />
           <span>{isSigningOut ? 'Signing out...' : 'Sign out'}</span>
@@ -98,14 +98,11 @@ export const QrGenerator: React.FC<QrGeneratorProps> = ({
       </div>
 
       <div className="text-center mb-6">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-50 text-[#059669] mb-4 ring-8 ring-emerald-50/50">
-          <QrCode className="w-7 h-7" />
-        </div>
         <h2 className="text-2xl font-bold text-[#0B132B] tracking-tight">
-          Generate QR Code
+          What would you like to share?
         </h2>
-        <p className="text-sm text-slate-500 mt-2">
-          Enter the link or text you want to turn into a QR Code.
+        <p className="text-sm text-slate-500 mt-1.5">
+          Enter a link or text below to create your QR Code.
         </p>
       </div>
 

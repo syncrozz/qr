@@ -570,20 +570,6 @@ export default function App() {
       )}
 
       <div className="mx-auto w-full max-w-2xl">
-        <header className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00A859] to-[#047857] text-white shadow-lg shadow-emerald-600/20 mb-4">
-            <QrCode className="w-6 h-6" />
-          </div>
-
-          <h1 className="text-3xl font-bold tracking-tight text-[#0B132B]">
-            GENERATE YOUR QR
-          </h1>
-
-          <p className="text-sm text-slate-500 mt-2">
-            {APP_CONFIG.tagline}
-          </p>
-        </header>
-
         {state.step === 'QR_GENERATOR' && (
           <QrGenerator
             user={user}
