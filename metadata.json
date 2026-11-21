@@ -1,6 +1,6 @@
 {
   "name": "SYNCROZZ QR",
-  "description": "A free public utility platform to generate high-quality static QR Codes quickly and easily.",
+  "description": "Create free QR codes online with SYNCROZZ QR. Convert links and text into QR codes, then download, save and share them in seconds.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
