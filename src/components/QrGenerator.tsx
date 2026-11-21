@@ -99,7 +99,7 @@ export const QrGenerator: React.FC<QrGeneratorProps> = ({
 
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-[#0B132B] tracking-tight">
-          What would you like to share?
+          GENERATE YOUR QR CODE
         </h2>
         <p className="text-sm text-slate-500 mt-1.5">
           Enter a link or text below to create your QR Code.
@@ -180,7 +180,7 @@ export const QrGenerator: React.FC<QrGeneratorProps> = ({
           ) : (
             <>
               <Sparkles className="w-4 h-4" />
-              <span>Generate QR Code</span>
+              <span>Generate</span>
             </>
           )}
         </button>
