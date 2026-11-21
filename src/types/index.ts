@@ -1,8 +1,14 @@
-export type AppStep = 'EMAIL_GATE' | 'QR_GENERATOR' | 'QR_OUTPUT';
+export type AppStep = 'QR_GENERATOR' | 'QR_OUTPUT';
+
+export interface AuthUser {
+  uid: string;
+  displayName: string | null;
+  email: string | null;
+  photoURL: string | null;
+}
 
 export interface AppState {
   step: AppStep;
-  email: string;
   qrContent: string;
   qrDataUrl: string | null;
   isGenerating: boolean;

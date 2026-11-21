@@ -77,7 +77,7 @@ export async function downloadQrAsJpg(
 
     img.onerror = (err) => {
       console.error('Error loading QR image:', err);
-      reject(new Error('Gagal memuat turun imej QR Code.'));
+      reject(new Error('Failed to download QR Code image.'));
     };
 
     img.src = qrDataUrl;
@@ -90,7 +90,7 @@ export async function downloadQrAsJpg(
  */
 export async function downloadRemoteImage(
   url: string,
-  fileName = 'syncrozz-sumbangan-qr.jpg'
+  fileName = 'syncrozz-support-qr.jpg'
 ): Promise<void> {
   try {
     const response = await fetch(url, { mode: 'cors' });

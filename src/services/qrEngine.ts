@@ -34,6 +34,6 @@ export async function generateQrDataUrl(
     return await QRCode.toDataURL(text, defaultOptions);
   } catch (error) {
     console.error('QR Generation Failed:', error);
-    throw new Error('Gagal menghasilkan QR Code. Sila cuba lagi.');
+    throw new Error('Failed to generate QR Code. Please try again.');
   }
 }

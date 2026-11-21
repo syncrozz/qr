@@ -12,21 +12,26 @@ import {
   Download,
   ExternalLink,
   HelpCircle,
+  LogOut,
   QrCode,
   Share2
 } from 'lucide-react';
 
-import { EmailGate } from './components/EmailGate';
+import { LandingAuth } from './components/LandingAuth';
 import { QrGenerator } from './components/QrGenerator';
 import { APP_CONFIG } from './config/appConfig';
+import {
+  signInWithGoogle,
+  signOutUser,
+  subscribeToAuthState
+} from './firebase';
 import { downloadQrAsJpg, downloadRemoteImage } from './services/imageExporter';
 import { generateQrDataUrl } from './services/qrEngine';
 import { sharePlatform } from './services/shareService';
-import type { AppState } from './types';
+import type { AppState, AuthUser } from './types';
 
 const INITIAL_STATE: AppState = {
-  step: 'EMAIL_GATE',
-  email: '',
+  step: 'QR_GENERATOR',
   qrContent: '',
   qrDataUrl: null,
   isGenerating: false,
@@ -36,7 +41,35 @@ const INITIAL_STATE: AppState = {
 const SUPPORT_QR_URL =
   'https://raw.githubusercontent.com/syncrozz/syncrozz-assets/main/Bank%20QR/QR%20RYT%20for%20Sumbangan.jpg';
 
+function mapAuthError(error: unknown): string {
+  if (error && typeof error === 'object' && 'code' in error) {
+    const code = String((error as { code?: string }).code);
+    if (
+      code === 'auth/popup-closed-by-user' ||
+      code === 'auth/cancelled-popup-request'
+    ) {
+      return '';
+    }
+    if (code === 'auth/popup-blocked') {
+      return 'Pop-up was blocked by your browser. Please allow pop-ups for this site and try again.';
+    }
+    if (code === 'auth/network-request-failed') {
+      return 'Network error while connecting to Google. Please check your connection and try again.';
+    }
+    if (code === 'auth/unauthorized-domain') {
+      return 'This domain is not authorized for Google Sign-In in Firebase Authentication settings.';
+    }
+  }
+  return 'Unable to sign in with Google right now. Please try again.';
+}
+
 export default function App() {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+  const [isSigningIn, setIsSigningIn] = useState<boolean>(false);
+  const [isSigningOut, setIsSigningOut] = useState<boolean>(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
   const [state, setState] = useState<AppState>(INITIAL_STATE);
   const [isSupportPage, setIsSupportPage] = useState(
     window.location.hash === '#support'
@@ -46,6 +79,28 @@ export default function App() {
   const [isSavingSupportQr, setIsSavingSupportQr] = useState<boolean>(false);
   const [isSupportQrSaved, setIsSupportQrSaved] = useState<boolean>(false);
   const [isDownloaded, setIsDownloaded] = useState<boolean>(false);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthState((firebaseUser) => {
+      if (firebaseUser) {
+        setUser({
+          uid: firebaseUser.uid,
+          displayName: firebaseUser.displayName,
+          email: firebaseUser.email,
+          photoURL: firebaseUser.photoURL
+        });
+        setAuthError(null);
+      } else {
+        setUser(null);
+        setState(INITIAL_STATE);
+      }
+      setIsAuthLoading(false);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -66,23 +121,43 @@ export default function App() {
     }, 4500);
   };
 
-  const handleEmailProceed = (email: string) => {
-    setState((current) => ({
-      ...current,
-      email,
-      step: 'QR_GENERATOR',
-      errorMessage: null
-    }));
+  const handleGoogleSignIn = async () => {
+    setIsSigningIn(true);
+    setAuthError(null);
+
+    try {
+      const firebaseUser = await signInWithGoogle();
+      setUser({
+        uid: firebaseUser.uid,
+        displayName: firebaseUser.displayName,
+        email: firebaseUser.email,
+        photoURL: firebaseUser.photoURL
+      });
+      setState(INITIAL_STATE);
+    } catch (error) {
+      console.error('Google Sign-In failed:', error);
+      const message = mapAuthError(error);
+      if (message) {
+        setAuthError(message);
+      }
+    } finally {
+      setIsSigningIn(false);
+    }
   };
 
-  const handleChangeEmail = () => {
-    setState((current) => ({
-      ...current,
-      step: 'EMAIL_GATE',
-      qrContent: '',
-      qrDataUrl: null,
-      errorMessage: null
-    }));
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      await signOutUser();
+      setUser(null);
+      setState(INITIAL_STATE);
+      showToast('Signed out successfully.');
+    } catch (error) {
+      console.error('Sign-out failed:', error);
+      showToast('Failed to sign out. Please try again.');
+    } finally {
+      setIsSigningOut(false);
+    }
   };
 
   const handleGenerate = async (content: string) => {
@@ -110,7 +185,7 @@ export default function App() {
         errorMessage:
           error instanceof Error
             ? error.message
-            : 'Gagal menghasilkan QR Code.'
+            : 'Failed to generate QR Code.'
       }));
     }
   };
@@ -133,7 +208,7 @@ export default function App() {
         'syncrozz-qr.jpg'
       );
       setIsDownloaded(true);
-      showToast('✅ QR Code berjaya disimpan ke galeri / fail peranti anda.');
+      showToast('✅ QR Code successfully saved to your device gallery / files.');
       setTimeout(() => setIsDownloaded(false), 4000);
     } catch (error) {
       setState((current) => ({
@@ -141,7 +216,7 @@ export default function App() {
         errorMessage:
           error instanceof Error
             ? error.message
-            : 'Gagal memuat turun QR Code.'
+            : 'Failed to download QR Code.'
       }));
     }
   };
@@ -151,14 +226,16 @@ export default function App() {
     try {
       await downloadRemoteImage(
         SUPPORT_QR_URL,
-        'syncrozz-sumbangan-duitnow-qr.jpg'
+        'syncrozz-support-duitnow-qr.jpg'
       );
       setIsSupportQrSaved(true);
-      showToast('✅ QR Code berjaya disimpan! Buka aplikasi bank anda dan pilih imej ini dari galeri.');
+      showToast(
+        '✅ QR Code saved! Open your banking app and select this image from your gallery.'
+      );
       setTimeout(() => setIsSupportQrSaved(false), 4500);
     } catch (error) {
       console.error('Failed to save support QR:', error);
-      showToast('Gagal memuat turun QR Code. Sila cuba lagi.');
+      showToast('Failed to download QR Code. Please try again.');
     } finally {
       setIsSavingSupportQr(false);
     }
@@ -168,37 +245,37 @@ export default function App() {
     if (!state.qrDataUrl) {
       setState((current) => ({
         ...current,
-        errorMessage: 'QR Code belum tersedia untuk dikongsi.'
+        errorMessage: 'QR Code is not ready to be shared yet.'
       }));
       return;
     }
 
     const result = await sharePlatform(
       APP_CONFIG.appName,
-      'QR Code yang dijana menggunakan SYNCROZZ QR.',
+      'QR Code generated with SYNCROZZ QR.',
       state.qrDataUrl
     );
 
     if (result.success) {
       showToast(
         result.method === 'native'
-          ? 'Berjaya membuka menu kongsi!'
-          : 'Pautan disalin ke papan keratan (clipboard)!'
+          ? 'Share menu opened!'
+          : 'Link copied to clipboard!'
       );
     } else {
       setState((current) => ({
         ...current,
-        errorMessage: 'Gagal berkongsi QR Code.'
+        errorMessage: 'Failed to share QR Code.'
       }));
     }
   };
 
   if (isSupportPage) {
     return (
-      <main className="min-h-screen bg-slate-50 px-4 py-8 sm:py-12 relative pb-20">
+      <main className="min-h-screen bg-[#F5FBF8] px-4 py-8 sm:py-12 relative pb-20">
         {/* Floating Toast Notification */}
         {toastMessage && (
-          <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md bg-slate-900/95 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md bg-[#0B132B]/95 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
               <Check className="w-4 h-4" />
             </div>
@@ -210,12 +287,12 @@ export default function App() {
 
         <div className="mx-auto w-full max-w-lg">
           <header className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 mb-3">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00A859] to-[#047857] text-white shadow-lg shadow-emerald-600/20 mb-3">
               <QrCode className="w-6 h-6" />
             </div>
 
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              Sokong Inovasi Ini ❤️
+            <h1 className="text-2xl font-bold tracking-tight text-[#0B132B]">
+              {APP_CONFIG.support.title}
             </h1>
 
             <p className="text-sm text-slate-500 mt-1">
@@ -230,17 +307,17 @@ export default function App() {
               </p>
             </div>
 
-            {/* Shopee-style QR Frame */}
+            {/* QR Frame */}
             <div className="flex flex-col items-center justify-center mt-6">
               <div className="w-full max-w-[280px] rounded-2xl border-2 border-slate-100 bg-white p-3.5 shadow-sm flex flex-col items-center">
                 <img
                   src={SUPPORT_QR_URL}
-                  alt="QR Code DuitNow Sumbangan SYNCROZZ"
+                  alt="SYNCROZZ DuitNow Support QR Code"
+                  referrerPolicy="no-referrer"
                   className="w-full aspect-square object-contain rounded-xl"
                 />
               </div>
 
-              {/* Shopee-style Save QR Code button */}
               <button
                 id="btn-save-support-qr"
                 type="button"
@@ -251,12 +328,12 @@ export default function App() {
                 {isSupportQrSaved ? (
                   <>
                     <Check className="w-4 h-4 text-emerald-600" />
-                    <span className="text-emerald-700">Tersimpan di Galeri</span>
+                    <span className="text-emerald-700">Saved to Gallery</span>
                   </>
                 ) : isSavingSupportQr ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-slate-400 border-t-indigo-600 rounded-full animate-spin" />
-                    <span>Menyimpan...</span>
+                    <div className="w-4 h-4 border-2 border-slate-400 border-t-[#059669] rounded-full animate-spin" />
+                    <span>Saving...</span>
                   </>
                 ) : (
                   <>
@@ -267,7 +344,7 @@ export default function App() {
               </button>
             </div>
 
-            {/* How To Pay Accordion (Shopee Concept) */}
+            {/* How To Pay Accordion */}
             <div className="mt-6 border-t border-slate-100 pt-4">
               <button
                 type="button"
@@ -275,8 +352,8 @@ export default function App() {
                 className="w-full flex items-center justify-between py-2 text-left text-sm font-semibold text-slate-700 hover:text-slate-900 transition cursor-pointer"
               >
                 <span className="flex items-center gap-2">
-                  <HelpCircle className="w-4 h-4 text-indigo-600" />
-                  Cara Bayar Guna Galeri (How To Pay)
+                  <HelpCircle className="w-4 h-4 text-[#059669]" />
+                  How to Pay via Gallery
                 </span>
                 {showHowToPay ? (
                   <ChevronUp className="w-4 h-4 text-slate-400" />
@@ -288,35 +365,35 @@ export default function App() {
               {showHowToPay && (
                 <div className="mt-3 p-4 bg-slate-50 rounded-2xl text-xs text-slate-600 space-y-2.5 border border-slate-100">
                   <div className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-bold shrink-0 text-[11px] mt-0.5">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold shrink-0 text-[11px] mt-0.5">
                       1
                     </span>
                     <p>
-                      Tekan butang <b>Save QR Code</b> di atas untuk simpan imej QR ke galeri/album telefon anda.
+                      Tap the <b>Save QR Code</b> button above to save the QR image to your phone gallery/album.
                     </p>
                   </div>
                   <div className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-bold shrink-0 text-[11px] mt-0.5">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold shrink-0 text-[11px] mt-0.5">
                       2
                     </span>
                     <p>
-                      Buka aplikasi perbankan anda (cth: <b>MAE (Maybank), Touch 'n Go eWallet, CIMB OCTO, Bank Islam</b> dll).
+                      Open your banking or e-wallet app (e.g., <b>MAE (Maybank), Touch &apos;n Go eWallet, CIMB OCTO, Bank Islam</b>, etc.).
                     </p>
                   </div>
                   <div className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-bold shrink-0 text-[11px] mt-0.5">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold shrink-0 text-[11px] mt-0.5">
                       3
                     </span>
                     <p>
-                      Tekan butang <b>Scan QR / DuitNow</b> &gt; pilih ikon <b>Galeri / Album</b> untuk muat naik gambar QR tadi.
+                      Tap <b>Scan QR / DuitNow</b> &gt; select the <b>Gallery / Album</b> icon to upload the saved QR image.
                     </p>
                   </div>
                   <div className="flex items-start gap-2.5">
-                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-bold shrink-0 text-[11px] mt-0.5">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold shrink-0 text-[11px] mt-0.5">
                       4
                     </span>
                     <p>
-                      Masukkan jumlah sumbangan (cth: RM1.00) dan sahkan pembayaran. Terima kasih!
+                      Enter your contribution amount (e.g., RM1.00) and confirm the payment. Thank you!
                     </p>
                   </div>
                 </div>
@@ -324,7 +401,7 @@ export default function App() {
             </div>
 
             <div className="text-center mt-6 pt-4 border-t border-slate-100">
-              <p className="text-sm font-bold text-slate-900">
+              <p className="text-sm font-bold text-[#0B132B]">
                 {APP_CONFIG.support.minimumNote}
               </p>
             </div>
@@ -338,7 +415,7 @@ export default function App() {
               className="mt-6 w-full inline-flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200 font-medium transition cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
-              Kembali ke SYNCROZZ QR
+              Back to SYNCROZZ QR
             </button>
           </section>
 
@@ -350,11 +427,35 @@ export default function App() {
     );
   }
 
+  if (isAuthLoading) {
+    return (
+      <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#F6FBF9] px-4">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00A859] to-[#047857] text-white flex items-center justify-center shadow-lg shadow-emerald-600/20 mb-4">
+          <QrCode className="w-6 h-6" />
+        </div>
+        <div
+          className="w-6 h-6 border-2 border-emerald-200 border-t-[#059669] rounded-full animate-spin"
+          aria-label="Restoring session"
+        />
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <LandingAuth
+        onGoogleSignIn={handleGoogleSignIn}
+        isSigningIn={isSigningIn}
+        authError={authError}
+      />
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 sm:py-12 relative pb-20">
+    <main className="min-h-screen bg-[#F5FBF8] px-4 py-8 sm:py-12 relative pb-20">
       {/* Floating Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md bg-slate-900/95 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md bg-[#0B132B]/95 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
             <Check className="w-4 h-4" />
           </div>
@@ -366,12 +467,12 @@ export default function App() {
 
       <div className="mx-auto w-full max-w-2xl">
         <header className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 mb-4">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00A859] to-[#047857] text-white shadow-lg shadow-emerald-600/20 mb-4">
             <QrCode className="w-6 h-6" />
           </div>
 
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            {APP_CONFIG.appName}
+          <h1 className="text-3xl font-bold tracking-tight text-[#0B132B]">
+            GENERATE YOUR QR
           </h1>
 
           <p className="text-sm text-slate-500 mt-2">
@@ -379,40 +480,51 @@ export default function App() {
           </p>
         </header>
 
-        {state.step === 'EMAIL_GATE' && (
-          <EmailGate
-            initialEmail={state.email}
-            onProceed={handleEmailProceed}
-          />
-        )}
-
         {state.step === 'QR_GENERATOR' && (
           <QrGenerator
-            userEmail={state.email}
+            user={user}
             initialContent={state.qrContent}
             isGenerating={state.isGenerating}
+            isSigningOut={isSigningOut}
             onGenerate={handleGenerate}
-            onChangeEmail={handleChangeEmail}
+            onSignOut={handleSignOut}
           />
         )}
 
         {state.step === 'QR_OUTPUT' && state.qrDataUrl && (
           <div className="w-full max-w-lg mx-auto bg-white rounded-3xl shadow-xl shadow-slate-900/5 border border-slate-100 p-6 sm:p-8">
+            <div className="flex items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-100">
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-slate-500 truncate">
+                  {user.displayName || user.email}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                disabled={isSigningOut}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0 cursor-pointer disabled:opacity-60 whitespace-nowrap"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign out</span>
+              </button>
+            </div>
+
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 mb-4 ring-8 ring-emerald-50/50">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-50 text-[#059669] mb-4 ring-8 ring-emerald-50/50">
                 <QrCode className="w-7 h-7" />
               </div>
 
-              <h2 className="text-2xl font-bold text-slate-900">
-                QR Code Siap
+              <h2 className="text-2xl font-bold text-[#0B132B]">
+                QR Code Ready
               </h2>
 
               <p className="text-sm text-slate-500 mt-2">
-                QR Code anda telah berjaya dijana.
+                Your QR Code has been successfully generated.
               </p>
             </div>
 
-            {/* Shopee-style QR Frame & Save Button */}
+            {/* QR Frame & Save Button */}
             <div className="mt-6 flex flex-col items-center justify-center">
               <div className="rounded-2xl bg-white border-2 border-slate-100 p-4 w-full max-w-sm flex items-center justify-center shadow-xs">
                 <img
@@ -431,20 +543,20 @@ export default function App() {
                 {isDownloaded ? (
                   <>
                     <Check className="w-4 h-4 text-emerald-600" />
-                    <span className="text-emerald-700">Tersimpan di Galeri</span>
+                    <span className="text-emerald-700">Saved to Gallery</span>
                   </>
                 ) : (
                   <>
                     <Download className="w-4 h-4 text-slate-700" />
-                    <span>Save QR Code (Simpan ke Galeri)</span>
+                    <span>Save QR Code to Gallery</span>
                   </>
                 )}
               </button>
             </div>
 
             <div className="mt-5 rounded-xl bg-slate-50 border border-slate-100 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
-                Kandungan
+              <p className="text-xs font-semibold tracking-wide text-slate-500 mb-1">
+                Content
               </p>
 
               <p className="text-sm text-slate-700 break-all">
@@ -462,19 +574,19 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleShare}
-                className="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 font-medium transition cursor-pointer shadow-md shadow-indigo-600/20"
+                className="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-white bg-[#059669] hover:bg-[#047857] font-medium transition cursor-pointer shadow-md shadow-emerald-600/20 whitespace-nowrap"
               >
                 <Share2 className="w-4 h-4" />
-                Kongsi QR Code
+                Share QR Code
               </button>
 
               <button
                 type="button"
                 onClick={handleBackToGenerator}
-                className="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200 font-medium transition cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200 font-medium transition cursor-pointer whitespace-nowrap"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Jana QR Baharu
+                Generate New QR
               </button>
             </div>
 
@@ -484,33 +596,33 @@ export default function App() {
                   href={state.qrContent}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-indigo-600 hover:bg-indigo-50 font-medium text-sm transition"
+                  className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-[#059669] hover:bg-emerald-50 font-medium text-sm transition"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  Buka Pautan dalam Tab Baharu
+                  Open Link in New Tab
                 </a>
               </div>
             )}
           </div>
         )}
 
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center mt-8 text-xs text-slate-500">
           <a
             href="#support"
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-500 text-xs font-medium hover:bg-slate-200 hover:text-slate-600 transition-all"
+            className="inline-flex items-center gap-1.5 font-medium hover:text-[#059669] transition-colors"
           >
             <span>Support</span>
             <span aria-hidden="true">❤️</span>
           </a>
         </div>
 
-        <footer className="text-center mt-3 text-xs text-slate-400">
+        <footer className="text-center mt-2.5 text-xs text-slate-400">
           Developed by{' '}
           <a
             href="https://sites.google.com/view/khairi-innovation/"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-medium text-slate-500 hover:text-slate-600 hover:underline transition"
+            className="font-medium text-slate-500 hover:text-[#0B132B] hover:underline transition"
           >
             Syncrozz
           </a>

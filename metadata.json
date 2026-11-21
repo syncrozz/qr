@@ -1,6 +1,6 @@
 {
   "name": "SYNCROZZ QR",
-  "description": "Platform utiliti awam percuma untuk menjana Static QR Code dengan pantas, berkualiti tinggi dan mesra pengguna.",
+  "description": "A free public utility platform to generate high-quality static QR Codes quickly and easily.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
