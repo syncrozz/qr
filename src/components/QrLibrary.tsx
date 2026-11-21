@@ -348,12 +348,12 @@ export const QrLibrary: React.FC<QrLibraryProps> = ({
                 </div>
 
                 {/* Action Bar */}
-                <div className="mt-3.5 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-1.5">
+                <div className="mt-3.5 pt-3 border-t border-slate-100 flex flex-nowrap items-center justify-between gap-1.5 overflow-x-auto overscroll-x-contain [scrollbar-width:thin]">
+                  <div className="flex flex-nowrap items-center gap-1.5 shrink-0">
                     <button
                       type="button"
                       onClick={() => setPreviewItem(item)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-[#059669] transition cursor-pointer whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-[#059669] transition cursor-pointer whitespace-nowrap shrink-0"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       <span>Preview</span>
@@ -363,7 +363,7 @@ export const QrLibrary: React.FC<QrLibraryProps> = ({
                       type="button"
                       onClick={() => handleDownloadItem(item)}
                       disabled={isDownloading}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-[#059669] transition cursor-pointer disabled:opacity-50 whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-[#059669] transition cursor-pointer disabled:opacity-50 whitespace-nowrap shrink-0"
                     >
                       <Download className="w-3.5 h-3.5" />
                       <span>{isDownloading ? 'Saving...' : 'Download'}</span>
@@ -372,7 +372,7 @@ export const QrLibrary: React.FC<QrLibraryProps> = ({
                     <button
                       type="button"
                       onClick={() => onRegenerate(item.content)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-[#059669] transition cursor-pointer whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-[#059669] transition cursor-pointer whitespace-nowrap shrink-0"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
                       <span>Regenerate</span>
@@ -381,7 +381,7 @@ export const QrLibrary: React.FC<QrLibraryProps> = ({
                     <button
                       type="button"
                       onClick={() => handleCopy(item)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 transition cursor-pointer whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 transition cursor-pointer whitespace-nowrap shrink-0"
                     >
                       {isCopied ? (
                         <>
@@ -399,12 +399,12 @@ export const QrLibrary: React.FC<QrLibraryProps> = ({
 
                   {/* Delete / Inline Confirmation */}
                   {isConfirmingDelete ? (
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-nowrap items-center gap-1.5 shrink-0">
                       <button
                         type="button"
                         onClick={() => handleConfirmDelete(item.id)}
                         disabled={isDeleting}
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition cursor-pointer disabled:opacity-60 whitespace-nowrap"
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition cursor-pointer disabled:opacity-60 whitespace-nowrap shrink-0"
                       >
                         {isDeleting ? 'Deleting...' : 'Confirm delete'}
                       </button>
@@ -412,7 +412,7 @@ export const QrLibrary: React.FC<QrLibraryProps> = ({
                         type="button"
                         onClick={() => setConfirmDeleteId(null)}
                         disabled={isDeleting}
-                        className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition cursor-pointer whitespace-nowrap"
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition cursor-pointer whitespace-nowrap shrink-0"
                       >
                         Cancel
                       </button>
@@ -422,7 +422,7 @@ export const QrLibrary: React.FC<QrLibraryProps> = ({
                       type="button"
                       onClick={() => setConfirmDeleteId(item.id)}
                       aria-label={`Delete ${item.title}`}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer whitespace-nowrap"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer whitespace-nowrap shrink-0"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>Delete</span>
