@@ -1,4 +1,42 @@
 {
-  "entities": {},
-  "firestore": {}
+  "entities": {
+    "QrHistoryItem": {
+      "title": "QrHistoryItem",
+      "description": "A QR Code record saved in a user's personal QR Library. Stores text/URL content and metadata without storing Base64 image data.",
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string",
+          "description": "The raw URL or text encoded in the QR Code.",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "title": {
+          "type": "string",
+          "description": "Human-readable title derived from the QR content.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the QR Code was generated and saved."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the QR Code record was last updated."
+        }
+      },
+      "required": ["content", "title", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}/qr_history/{qrId}": {
+      "schema": {
+        "$ref": "#/entities/QrHistoryItem"
+      },
+      "description": "Private per-user QR Code history collection owned exclusively by the authenticated user matching uid."
+    }
+  }
 }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ArrowLeft,
   Check,
@@ -19,6 +19,7 @@ import {
 
 import { LandingAuth } from './components/LandingAuth';
 import { QrGenerator } from './components/QrGenerator';
+import { QrLibrary } from './components/QrLibrary';
 import { APP_CONFIG } from './config/appConfig';
 import {
   signInWithGoogle,
@@ -27,8 +28,13 @@ import {
 } from './firebase';
 import { downloadQrAsJpg, downloadRemoteImage } from './services/imageExporter';
 import { generateQrDataUrl } from './services/qrEngine';
+import {
+  deleteQrHistoryItem,
+  saveQrHistoryItem,
+  subscribeToQrHistory
+} from './services/qrHistoryService';
 import { sharePlatform } from './services/shareService';
-import type { AppState, AuthUser } from './types';
+import type { AppState, AuthUser, QrHistoryItem } from './types';
 
 const INITIAL_STATE: AppState = {
   step: 'QR_GENERATOR',
@@ -80,6 +86,12 @@ export default function App() {
   const [isSupportQrSaved, setIsSupportQrSaved] = useState<boolean>(false);
   const [isDownloaded, setIsDownloaded] = useState<boolean>(false);
 
+  // Personal QR Library state
+  const [qrHistory, setQrHistory] = useState<QrHistoryItem[]>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState<boolean>(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [historyRetryCount, setHistoryRetryCount] = useState<number>(0);
+
   useEffect(() => {
     const unsubscribe = subscribeToAuthState((firebaseUser) => {
       if (firebaseUser) {
@@ -93,6 +105,9 @@ export default function App() {
       } else {
         setUser(null);
         setState(INITIAL_STATE);
+        setQrHistory([]);
+        setHistoryError(null);
+        setIsHistoryLoading(false);
       }
       setIsAuthLoading(false);
     });
@@ -101,6 +116,38 @@ export default function App() {
       unsubscribe();
     };
   }, []);
+
+  // Automatically retrieve and sync the authenticated user's private QR Library
+  useEffect(() => {
+    if (isAuthLoading || !user) {
+      setQrHistory([]);
+      setIsHistoryLoading(false);
+      setHistoryError(null);
+      return;
+    }
+
+    setIsHistoryLoading(true);
+    setHistoryError(null);
+
+    const unsubscribe = subscribeToQrHistory(
+      user.uid,
+      (items) => {
+        setQrHistory(items);
+        setIsHistoryLoading(false);
+        setHistoryError(null);
+      },
+      () => {
+        setIsHistoryLoading(false);
+        setHistoryError(
+          'Could not connect to your saved QR Library. Please check your connection and try again.'
+        );
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [user?.uid, isAuthLoading, historyRetryCount]);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -114,12 +161,12 @@ export default function App() {
     };
   }, []);
 
-  const showToast = (message: string) => {
+  const showToast = useCallback((message: string) => {
     setToastMessage(message);
     setTimeout(() => {
-      setToastMessage(null);
+      setToastMessage((current) => (current === message ? null : current));
     }, 4500);
-  };
+  }, []);
 
   const handleGoogleSignIn = async () => {
     setIsSigningIn(true);
@@ -151,6 +198,8 @@ export default function App() {
       await signOutUser();
       setUser(null);
       setState(INITIAL_STATE);
+      setQrHistory([]);
+      setHistoryError(null);
       showToast('Signed out successfully.');
     } catch (error) {
       console.error('Sign-out failed:', error);
@@ -178,6 +227,19 @@ export default function App() {
         step: 'QR_OUTPUT',
         errorMessage: null
       }));
+
+      // Automatically save the generated QR Code to the authenticated user's Firestore library
+      if (user) {
+        try {
+          await saveQrHistoryItem(user.uid, content);
+          showToast('✅ QR Code generated and saved to My QR Library.');
+        } catch (saveError) {
+          console.error('Failed to save QR to library:', saveError);
+          showToast(
+            'QR Code generated, but failed to save to your library. Please check your connection.'
+          );
+        }
+      }
     } catch (error) {
       setState((current) => ({
         ...current,
@@ -196,6 +258,48 @@ export default function App() {
       step: 'QR_GENERATOR',
       errorMessage: null
     }));
+  };
+
+  const handleRegenerateFromLibrary = (content: string) => {
+    setState((current) => ({
+      ...current,
+      step: 'QR_GENERATOR',
+      qrContent: content,
+      errorMessage: null
+    }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDeleteHistoryItem = async (qrId: string) => {
+    if (!user) return;
+    try {
+      await deleteQrHistoryItem(user.uid, qrId);
+      showToast('QR Code removed from My QR Library.');
+    } catch (error) {
+      console.error('Failed to delete QR from library:', error);
+      showToast('Failed to delete QR Code. Please try again.');
+    }
+  };
+
+  const handleShareLibraryItem = async (
+    item: QrHistoryItem,
+    qrDataUrl: string
+  ) => {
+    const result = await sharePlatform(
+      item.title || APP_CONFIG.appName,
+      `QR Code generated with SYNCROZZ QR: ${item.content}`,
+      qrDataUrl
+    );
+
+    if (result.success) {
+      showToast(
+        result.method === 'native'
+          ? 'Share menu opened!'
+          : 'Link copied to clipboard!'
+      );
+    } else {
+      showToast('Failed to share QR Code.');
+    }
   };
 
   const handleDownload = async () => {
@@ -606,7 +710,19 @@ export default function App() {
           </div>
         )}
 
-        <div className="flex justify-center mt-8 text-xs text-slate-500">
+        {/* Personal QR Library */}
+        <QrLibrary
+          items={qrHistory}
+          isLoading={isHistoryLoading}
+          errorMessage={historyError}
+          onRetry={() => setHistoryRetryCount((count) => count + 1)}
+          onRegenerate={handleRegenerateFromLibrary}
+          onDelete={handleDeleteHistoryItem}
+          onShareItem={handleShareLibraryItem}
+          onNotify={showToast}
+        />
+
+        <div className="flex justify-center mt-10 text-xs text-slate-500">
           <a
             href="#support"
             className="inline-flex items-center gap-1.5 font-medium hover:text-[#059669] transition-colors"

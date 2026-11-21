@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertCircle, LogOut, QrCode, Sparkles } from 'lucide-react';
+import { QR_CONTENT_MAX_LENGTH } from '../services/qrHistoryService';
 import type { AuthUser } from '../types';
 
 interface QrGeneratorProps {
@@ -23,12 +24,23 @@ export const QrGenerator: React.FC<QrGeneratorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [avatarFailed, setAvatarFailed] = useState(false);
 
+  useEffect(() => {
+    setContent(initialContent);
+  }, [initialContent]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanContent = content.trim();
 
     if (!cleanContent) {
       setError('Please enter a link or text first.');
+      return;
+    }
+
+    if (cleanContent.length > QR_CONTENT_MAX_LENGTH) {
+      setError(
+        `Content must be ${QR_CONTENT_MAX_LENGTH} characters or fewer.`
+      );
       return;
     }
 
@@ -109,6 +121,7 @@ export const QrGenerator: React.FC<QrGeneratorProps> = ({
             <textarea
               id="qr-content-input"
               rows={3}
+              maxLength={QR_CONTENT_MAX_LENGTH}
               value={content}
               onChange={(e) => {
                 setContent(e.target.value);

@@ -2,10 +2,78 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Default-deny safety net: this application uses Firebase Authentication only
-    // and does not read or write client documents in Firestore.
+    // Global Safety Net — default deny all unrelated database access
     match /{document=**} {
       allow read, write: if false;
+    }
+
+    // Hardened Global Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isVerifiedOwner(uid) {
+      return isVerifiedUser() && request.auth.uid == uid;
+    }
+
+    // Validation Blueprint for QrHistoryItem (synchronized with firebase-blueprint.json)
+    function isValidQrHistory(data) {
+      return data.keys().hasAll(['content', 'title', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['content', 'title', 'createdAt', 'updatedAt'])
+        && data.content is string
+        && data.content.size() >= 1
+        && data.content.size() <= 2048
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 120
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Personal QR Library: users/{uid}/qr_history/{qrId}
+    match /users/{uid}/qr_history/{qrId} {
+      // Strictly isolated per-user read access (no cross-user access)
+      allow get: if isVerifiedOwner(uid) && isValidId(uid) && isValidId(qrId);
+      allow list: if isVerifiedOwner(uid) && isValidId(uid);
+
+      // Verified owner can create valid QR history documents with server timestamps
+      allow create: if isVerifiedOwner(uid)
+        && isValidId(uid)
+        && isValidId(qrId)
+        && isValidQrHistory(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      // Verified owner can update title/content while preserving immutable createdAt
+      allow update: if isVerifiedOwner(uid)
+        && isValidId(uid)
+        && isValidId(qrId)
+        && isValidQrHistory(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['title', 'updatedAt'])
+          || incoming().diff(existing()).affectedKeys().hasOnly(['content', 'title', 'updatedAt'])
+        );
+
+      // Verified owner can delete their own QR history documents
+      allow delete: if isVerifiedOwner(uid) && isValidId(uid) && isValidId(qrId);
     }
   }
 }

@@ -7,6 +7,14 @@ export interface AuthUser {
   photoURL: string | null;
 }
 
+export interface QrHistoryItem {
+  id: string;
+  content: string;
+  title: string;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+}
+
 export interface AppState {
   step: AppStep;
   qrContent: string;
